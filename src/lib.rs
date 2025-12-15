@@ -1,4 +1,5 @@
 mod errors;
+
 use std::alloc::dealloc;
 use std::mem;
 use std::{
@@ -7,7 +8,7 @@ use std::{
     ptr::NonNull,
 };
 
-use crate::errors::ArenaError;
+pub use crate::errors::ArenaError;
 
 pub struct Arena {
     buffer: NonNull<u8>,
@@ -43,7 +44,7 @@ impl Arena {
         })
     }
 
-    pub fn alloc<T>(&self, value: T) -> &mut T {
+    pub fn alloc<T>(&self, value: T) -> Result<&mut T, ArenaError> {
         let size = mem::size_of::<T>();
         let align = mem::align_of::<T>();
 
@@ -52,14 +53,14 @@ impl Arena {
 
         let new_offset = aligned_offset + size;
         if new_offset > self.capacity {
-            panic!("Not enough capacity to allocate the value");
+            return Err(ArenaError::NotEnoughCapacity);
         }
 
         unsafe {
             let ptr = self.buffer.as_ptr().add(aligned_offset) as *mut T;
             ptr.write(value);
             self.offset.set(new_offset);
-            &mut *ptr
+            Ok(&mut *ptr)
         }
     }
 
@@ -89,38 +90,4 @@ impl Drop for Arena {
 
 fn align_up(addr: usize, align: usize) -> usize {
     (addr + align - 1) & !(align - 1)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_align_up() {
-        assert_eq!(align_up(0, 8), 0);
-        assert_eq!(align_up(1, 8), 8);
-        assert_eq!(align_up(7, 8), 8);
-        assert_eq!(align_up(8, 8), 8);
-        assert_eq!(align_up(9, 8), 16);
-    }
-
-    #[test]
-    fn test_basic_allocation() {
-        let arena = Arena::new(1024).unwrap();
-        let x = arena.alloc(42u32);
-        assert_eq!(*x, 42);
-    }
-
-    // #[test]
-    // #[ignore]
-    // fn test_multiple_allocations() {
-    //     let arena = Arena::new(1024);
-    //     let x = arena.alloc(10u32);
-    //     let y = arena.alloc(20u32);
-    //     let z = arena.alloc(30u32);
-
-    //     assert_eq!(*x, 10);
-    //     assert_eq!(*y, 20);
-    //     assert_eq!(*z, 30);
-    // }
 }

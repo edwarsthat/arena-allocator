@@ -3,6 +3,7 @@ pub enum ArenaError {
     ZeroCapacity,
     InvalidLayout,
     AllocationFailed,
+    NotEnoughCapacity,
 }
 
 impl std::fmt::Display for ArenaError {
@@ -11,6 +12,7 @@ impl std::fmt::Display for ArenaError {
             ArenaError::ZeroCapacity => write!(f, "Zero capacity"),
             ArenaError::InvalidLayout => write!(f, "Invalid layout"),
             ArenaError::AllocationFailed => write!(f, "Allocation failed"),
+            ArenaError::NotEnoughCapacity => write!(f, "Not enough capacity"),
         }
     }
 }

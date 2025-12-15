@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "arena-allocator"
+name = "arena_allocator"
 version = "0.1.0"
